@@ -91,35 +91,51 @@ cluster.inertias <- function(clusters, obs, num.centers = length(clusters@size),
   clusters@withinss <- unlist(lapply(1:num.centers, function(cluster) sum((obs[, which(clusters == cluster), drop = FALSE] - centers[, cluster]) ^ 2)))
 
 # Pick the dates.
-selected <- selected[5:300, ]
+selected <- selected[selected$dates >= as.Date("2004-05-12") & selected$dates <= as.Date("2005-07-14"), ]
 
-# Skip the date column.
-gerp.affinity <- gerp.matrix(selected[, -1], scale = TRUE, max.lag = 14)
-corr.affinity <- correlation.matrix(selected[, -1]) ^ 2
-write.csv(gerp.affinity, "gerp.affinity.csv")
-write.csv(corr.affinity, "corr.affinity.csv")
+if (!exists("gerp.affinity")) {
+  # Until we can figure out how to persist the lag structures, don't cache affinity matrix.
+  file.remove("gerp.affinity.csv")
+  if (!file.exists("gerp.affinity.csv")) {
+    # Skip the date column.
+    gerp.affinity <- gerp.matrix(selected[, -1], scale = TRUE, max.lag = 14)
+    write.csv(gerp.affinity, "gerp.affinity.csv")
+  } else {
+    gerp.affinity <- as.kernelMatrix(as.matrix(read.csv("gerp.affinity.csv", check.names = FALSE, row.names = 1)))
+  }
+}
+if (!exists("corr.affinity")) {
+  if (!file.exists("corr.affinity.csv")) {
+    # Skip the date column.
+    corr.affinity <- correlation.matrix(selected[, -1]) ^ 2
+    write.csv(corr.affinity, "corr.affinity.csv")
+  } else {
+    corr.affinity <- as.kernelMatrix(as.matrix(read.csv("corr.affinity.csv", check.names = FALSE, row.names = 1)))
+  }
+}
 
-#erp.dist <- cbind(do.call(cbind, lapply(attr(gerp.affinity, "pass.through.attr"), function(col) unlist(lapply(col, function(row) if (is.null(row)) NA else row$dist)))), NA)
-#diag(erp.dist) <- 0
-#erp.dist[upper.tri(erp.dist)] <- t(erp.dist)[upper.tri(erp.dist)]
-#colnames(erp.dist) <- colnames(selected[, -1])
-#rownames(erp.dist) <- colnames(selected[, -1])
-#write.csv(erp.dist, "erp.dist.csv")
+group.sector.mapping <- unique(industry.groups.from.cache[, c("GICS_INDUSTRY_GROUP_NAME", "GICS_INDUSTRY_GROUP")])
+rownames(group.sector.mapping) <- 1:nrow(group.sector.mapping)
+colnames(group.sector.mapping) <- c("Group", "Sector")
+group.sector.mapping$Sector <- group.sector.mapping$Sector %/% 100
+true.sectors <- as.factor(group.sector.mapping$Sector[match(true.groups, group.sector.mapping$Group)])
+ground.truth <- true.groups # true.sectors
 
 source("5.override_kmeans.R")
 tryCatch({
+  centers <- length(levels(ground.truth))
   # Average of industry groups for initial centers. Otherwise specc() is non-deterministic.
-  centers <- length(levels(true.groups))
-  attr(centers, "kmeans.pass.through") <- split(1:(ncol(selected) - 1), true.groups)
+  attr(centers, "kmeans.pass.through") <- split(1:(ncol(selected) - 1), ground.truth)
+  
   clusters <- kernlab::specc(gerp.affinity, centers)
-  print(paste("GERP rand index:", adjusted.rand.index(as.integer(true.groups), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+  print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
   
-  # What if we chose to do the trading stategy based on clusters produced by correlation?
+  # Baseline 1: do trading stategy based on clusters produced by correlation.
   #clusters <- kernlab::specc(corr.affinity, centers)
-  #print(paste("CORR rand index:", adjusted.rand.index(as.integer(true.groups), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+  #print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
   
-  # Baseline.
-  #clusters <- true.groups
+  # Baseline 2: do trading strategy based on industry groups as clusters.
+  #clusters <- ground.truth
 }, finally = {
   attr(kmeans, "revert")()
 })

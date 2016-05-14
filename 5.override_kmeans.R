@@ -117,7 +117,7 @@ reassign.in.package <- function(name, value, pkg) {
     assign.in.namespace(name, value, pkg, env)
     # Overwrites implementation available in global scope
     # e.g. just referencing "kmeans'.
-    env <- as.environment("package:stats")
+    env <- as.environment(paste("package", pkg, sep = ":"))
     unlockBinding(name, env)
     assign(name, value, env)
     

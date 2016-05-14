@@ -8,10 +8,6 @@ intersperse <- function(x, y)
   c(rbind(x, y))
 
 predicted.clusters <- split(2:ncol(selected), clusters)
-# If you want to try this strategy without doing any machine learning,
-# use the industry groups instead of the spectral clustering output.
-# Find the companies that lead the industry rather than a cluster.
-#predicted.clusters <- split(2:ncol(selected), true.groups)
 predicted.clusters <- lapply(predicted.clusters, function(company.indices) {
   x <- selected[, company.indices, drop = FALSE]
   attr(x, "members") <- company.indices
