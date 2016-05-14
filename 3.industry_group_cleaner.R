@@ -23,7 +23,7 @@ groups <- setNames(lapply(names(groups), function(group.name) {
   # Filter to 3000 most recent trading days.
   group <- tail(group, 3000)
   # Filter to companies that have been public for the entire time period.
-  group <- group[, as.numeric(group[1, ]) != 0]
+  group <- group[, c(1, unname(which(apply(group[, -1], 2, function(col) !any(is.na(col)))) + 1))]
   
   # Perform standardization to make the price data unitless and comparable.
   group[, -1] <- apply(group[, -1], 2, function(col) (col - mean(col)) / sd(col))

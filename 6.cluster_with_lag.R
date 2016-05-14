@@ -2,8 +2,13 @@ library(kernlab)
 library(TSdist)
 library(parallel)
 
+invalidate.affinities <- FALSE
+baseline <- 0
+
 setwd(dirname(parent.frame(2)$ofile))
 
+if (invalidate.affinities)
+  rm(selected)
 if (!exists("selected") || !exists("true.groups"))
   source("4.company_selector.R")
 
@@ -93,9 +98,10 @@ cluster.inertias <- function(clusters, obs, num.centers = length(clusters@size),
 # Pick the dates.
 selected <- selected[selected$dates >= as.Date("2004-05-12") & selected$dates <= as.Date("2005-07-14"), ]
 
-if (!exists("gerp.affinity")) {
+if (!exists("gerp.affinity") || invalidate.affinities) {
   # Until we can figure out how to persist the lag structures, don't cache affinity matrix.
-  file.remove("gerp.affinity.csv")
+  if (TRUE || invalidate.affinities)
+    file.remove("gerp.affinity.csv")
   if (!file.exists("gerp.affinity.csv")) {
     # Skip the date column.
     gerp.affinity <- gerp.matrix(selected[, -1], scale = TRUE, max.lag = 14)
@@ -104,7 +110,9 @@ if (!exists("gerp.affinity")) {
     gerp.affinity <- as.kernelMatrix(as.matrix(read.csv("gerp.affinity.csv", check.names = FALSE, row.names = 1)))
   }
 }
-if (!exists("corr.affinity")) {
+if (!exists("corr.affinity") || invalidate.affinities) {
+  if (invalidate.affinities)
+    file.remove("corr.affinity.csv")
   if (!file.exists("corr.affinity.csv")) {
     # Skip the date column.
     corr.affinity <- correlation.matrix(selected[, -1]) ^ 2
@@ -127,15 +135,20 @@ tryCatch({
   # Average of industry groups for initial centers. Otherwise specc() is non-deterministic.
   attr(centers, "kmeans.pass.through") <- split(1:(ncol(selected) - 1), ground.truth)
   
-  clusters <- kernlab::specc(gerp.affinity, centers)
-  print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
-  
-  # Baseline 1: do trading stategy based on clusters produced by correlation.
-  #clusters <- kernlab::specc(corr.affinity, centers)
-  #print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
-  
-  # Baseline 2: do trading strategy based on industry groups as clusters.
-  #clusters <- ground.truth
+  switch(as.character(baseline),
+    `0` = {
+      clusters <- kernlab::specc(gerp.affinity, centers)
+      print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+    },
+    `1` = {
+      # Baseline 1: do trading stategy based on clusters produced by correlation.
+      clusters <- kernlab::specc(corr.affinity, centers)
+      print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+    },
+    `2` =
+      # Baseline 2: do trading strategy based on industry groups as clusters.
+      clusters <- ground.truth
+  )
 }, finally = {
   attr(kmeans, "revert")()
 })

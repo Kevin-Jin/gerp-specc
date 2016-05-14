@@ -1,14 +1,17 @@
 library(zoo)
 library(parallel)
-library('devEMF') # install.packages('devEMF')
 
 setwd(dirname(parent.frame(2)$ofile))
+
+for.report <- FALSE
+if (for.report)
+  library('devEMF') # install.packages('devEMF')
 
 if (!exists("cluster.leaders"))
   source("7.cluster_leader.R")
 
-# 1st and 80th percentiles in normal distribution.
-threshold <- qnorm(c(`short` = 0, `long` = 0.80))
+# 10th and 50th percentiles in normal distribution.
+threshold <- qnorm(c(`short` = 0.1, `long` = 0.5))
 # Sell 14 trading days after buying.
 holding.period <- 14
 
@@ -71,15 +74,17 @@ inventories <- do.call(cbind, lapply(1:length(cluster.leaders), function(cluster
 
 strategy.days <- as.numeric(do.call(`-`, as.list(rev(range(selected$dates)))), units = "days")
 
-#benchmark <- calc.equity.curves(rbind(matrix(1, nrow = nrow(inventories) - 1, ncol = ncol(inventories)), 0), predicted.clusters, cluster.leaders)
-#ann.returns <- c(tail(benchmark, 1)) ^ (365.25 / strategy.days) - 1
-#print(round(ann.returns * 100, 2))
-#ann.returns <- c(mean(tail(benchmark, 1))) ^ (365.25 / strategy.days) - 1
-#print(round(ann.returns * 100, 2))
+#benchmark <- calc.equity.curves(rbind(0, matrix(1, nrow = nrow(inventories) - 2, ncol = ncol(inventories)), 0), predicted.clusters, cluster.leaders)
+#benchmark.returns <- c(tail(benchmark, 1)) ^ (365.25 / strategy.days) - 1
+#print(round(benchmark.returns * 100, 2))
+#benchmark <- rowMeans(benchmark)
+#benchmark.returns <- c(tail(benchmark, 1)) ^ (365.25 / strategy.days) - 1
+#print(paste("Benchmark: ", round(benchmark.returns * 100, 2), "%", sep = ""))
 
 # Buy and hold strategy.
-benchmark <- calc.equity.curves(rbind(matrix(1, nrow = nrow(inventories) - 1, ncol = 1), 0), list(selected[, -1]), NA)
+benchmark <- calc.equity.curves(rbind(0, matrix(1, nrow = nrow(inventories) - 2, ncol = 1), 0), list(selected[, -1]), NA)
 benchmark.returns <- c(tail(benchmark, 1)) ^ (365.25 / strategy.days) - 1
+benchmark <- benchmark[, 1]
 print(paste("Benchmark: ", round(benchmark.returns * 100, 2), "%", sep = ""))
 
 equity.curves <- calc.equity.curves(inventories, predicted.clusters, cluster.leaders)
@@ -92,9 +97,11 @@ equity.curve <- rowMeans(equity.curves)
 ann.returns <- c(tail(equity.curve, 1)) ^ (365.25 / strategy.days) - 1
 print(paste("Active: ", round(ann.returns * 100, 2), "%", sep = ""))
 
-emf('returns.emf', width = 8, height = 4)
-#plot(selected$dates, equity.curve, type = "l")
-#lines(selected$dates, benchmark[, 1], col = "red")
-plot(selected$dates, equity.curve - benchmark[, 1], type = "l", main = paste("Excess return (annualized ", round(ann.returns * 100, 2), "% cf. ", round(benchmark.returns * 100, 2), "%)", sep = ""), ylab = "erp_cluster - buy_and_hold")
+if (for.report)
+  emf('returns.emf', width = 8, height = 4)
+matplot(selected$dates, cbind(equity.curve, benchmark), lty = 1, type = "l", xaxt = "n")
+axis(1, at = seq(min(selected$dates), max(selected$dates), by = "quarter"), labels = format(seq(min(selected$dates), max(selected$dates), by = "quarter"), "%m/%y"))
+plot(selected$dates, equity.curve - benchmark, type = "l", main = paste("Excess return (annualized ", round(ann.returns * 100, 2), "% cf. ", round(benchmark.returns * 100, 2), "%)", sep = ""), ylab = "erp_cluster - buy_and_hold")
 abline(h = 0)
-dev.off()
+if (for.report)
+  dev.off()
