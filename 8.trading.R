@@ -101,7 +101,9 @@ if (for.report)
   emf('returns.emf', width = 8, height = 4)
 matplot(selected$dates, cbind(equity.curve, benchmark), lty = 1, type = "l", xaxt = "n")
 axis(1, at = seq(min(selected$dates), max(selected$dates), by = "quarter"), labels = format(seq(min(selected$dates), max(selected$dates), by = "quarter"), "%m/%y"))
-plot(selected$dates, equity.curve - benchmark, type = "l", main = paste("Excess return (annualized ", round(ann.returns * 100, 2), "% cf. ", round(benchmark.returns * 100, 2), "%)", sep = ""), ylab = "erp_cluster - buy_and_hold")
+plot(selected$dates, equity.curve - benchmark, type = "l", main = paste("Excess return (annualized ", round(ann.returns * 100, 2), "% cf. ", round(benchmark.returns * 100, 2), "%)", sep = ""), ylab = "kmeans_cluster - buy_and_hold")
+
+
 abline(h = 0)
 if (for.report)
   dev.off()

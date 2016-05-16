@@ -1,7 +1,9 @@
 setwd(dirname(parent.frame(2)$ofile))
 
-if (!exists("clusters") || !exists("gerp.affinity"))
-  source("6.cluster_with_lag.R")
+print(baseLine)
+
+#if (!exists("clusters") || !exists("gerp.affinity"))
+source("6.cluster_with_lag.R")
 
 intersperse <- function(x, y)
   # R is column major, so it reads the two rows alternately when downcasting.

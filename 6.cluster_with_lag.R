@@ -1,9 +1,13 @@
 library(kernlab)
 library(TSdist)
 library(parallel)
+library(stats)
+library(fossil)
 
 invalidate.affinities <- FALSE
-baseline <- 0
+baseline <- '3'
+if(exists("baseLine"))
+  baseline <- baseLine
 
 setwd(dirname(parent.frame(2)$ofile))
 
@@ -135,19 +139,34 @@ tryCatch({
   # Average of industry groups for initial centers. Otherwise specc() is non-deterministic.
   attr(centers, "kmeans.pass.through") <- split(1:(ncol(selected) - 1), ground.truth)
   
+  #clusters <- stats::kmeans(t(data.matrix(selected))[-1,], centers)
+  #print(paste("KMEANS fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters$cluster))))
+  #print(paste("KMEANS adj rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters$cluster)), "Inertia:", clusters$tot.withinss))
+  
+  #clusters <- kernlab::specc(gerp.affinity, centers)
+  #print(paste("GERP fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters))))
+  #print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+  
+  #clusters <- kernlab::specc(corr.affinity, centers)
+  #print(paste("CORR fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters))))
+  #print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+  
   switch(as.character(baseline),
     `0` = {
+      #GERP clusters
       clusters <- kernlab::specc(gerp.affinity, centers)
-      print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
     },
     `1` = {
       # Baseline 1: do trading stategy based on clusters produced by correlation.
       clusters <- kernlab::specc(corr.affinity, centers)
-      print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
     },
-    `2` =
+    `2` = {
       # Baseline 2: do trading strategy based on industry groups as clusters.
       clusters <- ground.truth
+    },
+    '3' = 
+      #Baseline 3: Kmeans
+      clusters <- stats::kmeans(t(data.matrix(selected))[-1,], centers)$cluster
   )
 }, finally = {
   attr(kmeans, "revert")()
