@@ -2,7 +2,7 @@ setwd(dirname(parent.frame(2)$ofile))
 
 invalidate.samples <- FALSE
 
-groups.to.use <- 1:24
+groups.to.use <- 1:10
 
 if (!file.exists("selected.csv") || invalidate.samples) {
   if (!exists("groups"))
