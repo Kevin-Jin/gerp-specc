@@ -4,6 +4,7 @@ library(parallel)
 
 invalidate.affinities <- FALSE
 baseline <- 0
+sample.date.range <- c(as.Date("2004-05-12"), as.Date("2005-07-14"))
 
 setwd(dirname(parent.frame(2)$ofile))
 
@@ -96,7 +97,7 @@ cluster.inertias <- function(clusters, obs, num.centers = length(clusters@size),
   clusters@withinss <- unlist(lapply(1:num.centers, function(cluster) sum((obs[, which(clusters == cluster), drop = FALSE] - centers[, cluster]) ^ 2)))
 
 # Pick the dates.
-selected <- selected[selected$dates >= as.Date("2004-05-12") & selected$dates <= as.Date("2005-07-14"), ]
+selected <- selected[selected$dates >= sample.date.range[1] & selected$dates <= sample.date.range[2], ]
 
 if (!exists("gerp.affinity") || invalidate.affinities) {
   # Until we can figure out how to persist the lag structures, don't cache affinity matrix.

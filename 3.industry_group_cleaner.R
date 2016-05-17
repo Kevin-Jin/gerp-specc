@@ -7,6 +7,8 @@
 
 setwd(dirname(parent.frame(2)$ofile))
 
+data.set.date.range <- c(as.Date("2004-05-05"), as.Date("2016-04-05"))
+
 source("2.merge_df.R")
 
 if (!exists("industry.groups.from.cache"))
@@ -20,8 +22,8 @@ groups <- lapply(groups, function(group) single.df[c("dates", rownames(group))])
 pdf(file = "industry_group_plots.pdf", title = "Industry groups", width = 22, height = 17)
 groups <- setNames(lapply(names(groups), function(group.name) {
   group <- groups[[group.name]]
-  # Filter to 3000 most recent trading days.
-  group <- tail(group, 3000)
+  # Filter by dates
+  group <- group[group$dates >= data.set.date.range[1] & group$dates <= data.set.date.range[2], ]
   # Filter to companies that have been public for the entire time period.
   group <- group[, c(1, unname(which(apply(group[, -1], 2, function(col) !any(is.na(col)))) + 1))]
   

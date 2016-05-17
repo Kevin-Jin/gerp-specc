@@ -2,7 +2,8 @@ setwd(dirname(parent.frame(2)$ofile))
 
 invalidate.samples <- FALSE
 
-groups.to.use <- 1:10
+groups.to.use <- 1:24
+sample.companies.per.group <- 3
 
 if (!file.exists("selected.csv") || invalidate.samples) {
   if (!exists("groups"))
@@ -12,7 +13,12 @@ if (!file.exists("selected.csv") || invalidate.samples) {
   
   # Skip date column for each group.
   from.each <- min(unlist(lapply(groups.to.use, length))) - 1
-  print(paste("Smallest group has", from.each, "companies, so sampling", from.each * length(groups.to.use), "companies total"))
+  if (from.each <= sample.companies.per.group) {
+    print(paste("Smallest group has", from.each, "companies, so sampling", from.each * length(groups.to.use), "companies total"))
+  } else {
+    from.each <- sample.companies.per.group
+    print(paste("Sampling", from.each * length(groups.to.use), "companies total"))
+  }
   new.groups <- setNames(lapply(groups.to.use, function(group)
     group[, sample(2:length(group), from.each)]
   ), names(groups.to.use))
