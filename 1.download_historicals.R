@@ -1,6 +1,9 @@
 setwd(dirname(parent.frame(2)$ofile))
 
+source("0.external_dependencies.R")
+
 cache.historicals.from.bbg <- function() {
+  check.cran.pkg("Rblpapi")
   library(Rblpapi)
   blpConnect()
   
@@ -17,6 +20,7 @@ cache.historicals.from.bbg <- function() {
 }
 
 cache.industry.groups.from.bbg <- function(tickers) {
+  check.cran.pkg("Rblpapi")
   library(Rblpapi)
   blpConnect()
   
@@ -58,7 +62,7 @@ initialize.workspace <- function() {
   print(validate.cache.industry.groups(industry.groups.from.bbg, industry.groups.from.cache))
 }
 
-if (!dir.exists("historicals"))
+if (!dir.exists("historicals") && !file.exists("combined.csv"))
   prices.from.cache <- cache.historicals.from.bbg()
 
 if (!file.exists("industry_groups.csv")) {

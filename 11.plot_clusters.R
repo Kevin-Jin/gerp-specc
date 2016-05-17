@@ -1,11 +1,11 @@
 setwd(dirname(parent.frame(2)$ofile))
 
+for.report <- TRUE
+
 if (!exists("cluster.leaders"))
   source("7.cluster_leader.R")
 if (!exists("lag.struct.coords"))
   source("10.lead_lag.R")
-
-for.report <- TRUE
 
 for (i in 1:length(predicted.clusters))
   attr(predicted.clusters[[i]], "leader") <- which(colnames(predicted.clusters[[i]]) == cluster.leaders[i])

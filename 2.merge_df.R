@@ -1,11 +1,15 @@
 setwd(dirname(parent.frame(2)$ofile))
 
-library(zoo) # install.packages("zoo")
-
 invalidate.combined <- FALSE
+
+source("0.external_dependencies.R")
+
 source("1.download_historicals.R")
 
 if (!file.exists("combined.csv") || invalidate.combined) {
+  check.cran.pkg("zoo")
+  library(zoo)
+  
   if (!exists("prices.from.cache"))
     prices.from.cache <- load.historicals.from.cache()
   

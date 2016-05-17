@@ -1,12 +1,16 @@
-library(kernlab)
-library(TSdist)
-library(parallel)
+setwd(dirname(parent.frame(2)$ofile))
 
 invalidate.affinities <- FALSE
 baseline <- 0
 sample.date.range <- c(as.Date("2004-05-12"), as.Date("2005-07-14"))
 
-setwd(dirname(parent.frame(2)$ofile))
+source("0.external_dependencies.R")
+check.cran.pkg("kernlab")
+library(kernlab)
+check.tsdist.pkg()
+library(TSdist)
+check.cran.pkg("parallel")
+library(parallel)
 
 if (invalidate.affinities)
   rm(selected)

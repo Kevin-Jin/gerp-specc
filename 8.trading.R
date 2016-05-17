@@ -1,11 +1,16 @@
-library(zoo)
-library(parallel)
-
 setwd(dirname(parent.frame(2)$ofile))
 
 for.report <- FALSE
-if (for.report)
-  library('devEMF') # install.packages('devEMF')
+
+source("0.external_dependencies.R")
+check.cran.pkg("zoo")
+library(zoo)
+check.cran.pkg("parallel")
+library(parallel)
+if (for.report) {
+  library(devEMF)
+  check.cran.pkg("devEmf")
+}
 
 if (!exists("cluster.leaders"))
   source("7.cluster_leader.R")
@@ -27,7 +32,7 @@ calc.equity.curves <- function(inventories, predicted.clusters, cluster.leaders)
     
     cluster.inventory <- inventories[, cluster.index]
     holding.dates <- c(which(cluster.inventory != 0), nrow(to.trade.returns))
-    na.locf(Reduce(function(cumulative.value, row) {
+    zoo::na.locf(Reduce(function(cumulative.value, row) {
       # Divide the current value of the portfolio evenly into the companies
       # in the cluster.
       invest.in.each <- tail(cumulative.value, 1) / ncol(to.trade.returns)
