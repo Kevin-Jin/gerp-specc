@@ -9,7 +9,7 @@ if (for.report)
 
 #if (!exists("cluster.leaders"))
 
-if(length(all.equity.curves) != 4) {
+if(!exists("all.equity.curves") || length(all.equity.curves) != 4) {
   all.equity.curves = list()
   
   for(base in 0:3) {

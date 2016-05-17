@@ -16,9 +16,6 @@ if (!exists("industry.groups.from.cache"))
 #groups <- split(industry.groups.from.cache, industry.groups.from.cache$GICS_INDUSTRY_GROUP %/% 100)
 groups <- split(industry.groups.from.cache, industry.groups.from.cache$GICS_INDUSTRY_GROUP_NAME)
 
-#Limit number of classes
-#groups <- groups[1:10]
-
 groups <- lapply(groups, function(group) single.df[c("dates", rownames(group))])
 
 pdf(file = "industry_group_plots.pdf", title = "Industry groups", width = 22, height = 17)

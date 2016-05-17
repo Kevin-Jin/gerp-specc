@@ -16,6 +16,9 @@ if (invalidate.affinities)
 if (!exists("selected") || !exists("true.groups"))
   source("4.company_selector.R")
 
+#arg.num.groups <- 24  
+#source("4.company_selector.R")
+
 adjusted.rand.index <- function(x, y) {
   if (length(x) != length(y)) 
     stop("different sizes of the label assignments")
@@ -100,7 +103,8 @@ cluster.inertias <- function(clusters, obs, num.centers = length(clusters@size),
   clusters@withinss <- unlist(lapply(1:num.centers, function(cluster) sum((obs[, which(clusters == cluster), drop = FALSE] - centers[, cluster]) ^ 2)))
 
 # Pick the dates.
-selected <- selected[selected$dates >= as.Date("2004-05-12") & selected$dates <= as.Date("2005-07-14"), ]
+#selected <- selected[selected$dates >= as.Date("2004-05-12") & selected$dates <= as.Date("2005-07-14"), ]
+selected <- selected[selected$dates >= as.Date("2008-05-12") & selected$dates <= as.Date("2009-07-14"), ]
 
 if (!exists("gerp.affinity") || invalidate.affinities) {
   # Until we can figure out how to persist the lag structures, don't cache affinity matrix.
@@ -139,34 +143,34 @@ tryCatch({
   # Average of industry groups for initial centers. Otherwise specc() is non-deterministic.
   attr(centers, "kmeans.pass.through") <- split(1:(ncol(selected) - 1), ground.truth)
   
-  #clusters <- stats::kmeans(t(data.matrix(selected))[-1,], centers)
-  #print(paste("KMEANS fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters$cluster))))
-  #print(paste("KMEANS adj rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters$cluster)), "Inertia:", clusters$tot.withinss))
+  clusters <- stats::kmeans(t(data.matrix(selected))[-1,], centers)
+  print(paste("KMEANS fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters$cluster))))
+  print(paste("KMEANS adj rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters$cluster)), "Inertia:", clusters$tot.withinss))
   
-  #clusters <- kernlab::specc(gerp.affinity, centers)
-  #print(paste("GERP fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters))))
-  #print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+  clusters <- kernlab::specc(gerp.affinity, centers)
+  print(paste("GERP fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters))))
+  print(paste("GERP rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
   
-  #clusters <- kernlab::specc(corr.affinity, centers)
-  #print(paste("CORR fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters))))
-  #print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
+  clusters <- kernlab::specc(corr.affinity, centers)
+  print(paste("CORR fossil rand index:", fossil::rand.index(as.integer(ground.truth), as.integer(clusters))))
+  print(paste("CORR rand index:", adjusted.rand.index(as.integer(ground.truth), as.integer(clusters)), "Inertia:", sum(cluster.inertias(clusters, selected[, -1]))))
   
   switch(as.character(baseline),
-    `0` = {
-      #GERP clusters
-      clusters <- kernlab::specc(gerp.affinity, centers)
-    },
-    `1` = {
-      # Baseline 1: do trading stategy based on clusters produced by correlation.
-      clusters <- kernlab::specc(corr.affinity, centers)
-    },
-    `2` = {
-      # Baseline 2: do trading strategy based on industry groups as clusters.
-      clusters <- ground.truth
-    },
-    '3' = 
-      #Baseline 3: Kmeans
-      clusters <- stats::kmeans(t(data.matrix(selected))[-1,], centers)$cluster
+         `0` = {
+           #GERP clusters
+           clusters <- kernlab::specc(gerp.affinity, centers)
+         },
+         `1` = {
+           # Baseline 1: do trading stategy based on clusters produced by correlation.
+           clusters <- kernlab::specc(corr.affinity, centers)
+         },
+         `2` = {
+           # Baseline 2: do trading strategy based on industry groups as clusters.
+           clusters <- ground.truth
+         },
+         '3' = 
+           #Baseline 3: Kmeans
+           clusters <- stats::kmeans(t(data.matrix(selected))[-1,], centers)$cluster
   )
 }, finally = {
   attr(kmeans, "revert")()

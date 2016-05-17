@@ -2,17 +2,30 @@ setwd(dirname(parent.frame(2)$ofile))
 
 invalidate.samples <- FALSE
 
-groups.to.use <- 1:24
+groups.to.use <- 24
+if(exists("arg.num.groups")) {
+  rm("selected")
+  rm("true.groups")
+  rm("gerp.affinity")
+  rm("corr.affinity")
+  file.remove("gerp.affinity.csv")
+  file.remove("corr.affinity.csv")
+  file.remove("selected.csv")
+  groups.to.use <- arg.num.groups
+}
 
 if (!file.exists("selected.csv") || invalidate.samples) {
   if (!exists("groups"))
     source("3.industry_group_cleaner.R")
   
-  groups.to.use <- groups[groups.to.use]
+  print(sample(1:24, groups.to.use, replace=FALSE))
+  groups.to.use <- groups[sample(1:24, groups.to.use)]
   
   # Skip date column for each group.
   from.each <- min(unlist(lapply(groups.to.use, length))) - 1
   print(paste("Smallest group has", from.each, "companies, so sampling", from.each * length(groups.to.use), "companies total"))
+  
+  # 
   new.groups <- setNames(lapply(groups.to.use, function(group)
     group[, sample(2:length(group), from.each)]
   ), names(groups.to.use))
