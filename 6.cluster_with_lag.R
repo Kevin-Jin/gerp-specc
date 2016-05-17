@@ -11,7 +11,7 @@ setwd(dirname(parent.frame(2)$ofile))
 if (invalidate.affinities)
   rm(selected)
 if (!exists("selected") || !exists("true.groups"))
-  source("4.company_selector.R")
+  source("4.sample_companies.R")
 
 adjusted.rand.index <- function(x, y) {
   if (length(x) != length(y)) 

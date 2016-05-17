@@ -7,7 +7,7 @@ sample.companies.per.group <- 3
 
 if (!file.exists("selected.csv") || invalidate.samples) {
   if (!exists("groups"))
-    source("3.industry_group_cleaner.R")
+    source("3.clean_industry_groups.R")
   
   groups.to.use <- groups[groups.to.use]
   
