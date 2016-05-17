@@ -19,7 +19,7 @@ if (!exists("industry.groups.from.cache"))
 groups <- split(industry.groups.from.cache, industry.groups.from.cache$GICS_INDUSTRY_GROUP_NAME)
 groups <- lapply(groups, function(group) single.df[c("dates", rownames(group))])
 
-pdf(file = "industry_group_plots.pdf", title = "Industry groups", width = 22, height = 17)
+pdf(file = "outliers.pdf", title = "Industry groups", width = 22, height = 17)
 groups <- setNames(lapply(names(groups), function(group.name) {
   group <- groups[[group.name]]
   # Filter by dates
@@ -59,7 +59,7 @@ groups <- setNames(lapply(names(groups), function(group.name) {
 }), names(groups))
 dev.off()
 
-pdf(file = "industry_group_plots_filtered.pdf", title = "Industry groups", width = 22, height = 17)
+pdf(file = "outliers_removed.pdf", title = "Industry groups", width = 22, height = 17)
 lapply(names(groups), function(group.name) {
   group <- groups[[group.name]]
   matplot(group[, 1], group[, -1], type = "l", xlab = "Date", ylab = "Z-transformed Price", main = group.name, xaxt = "n")

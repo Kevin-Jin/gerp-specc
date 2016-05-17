@@ -10,7 +10,7 @@ if (!exists("lag.struct.coords"))
 for (i in 1:length(predicted.clusters))
   attr(predicted.clusters[[i]], "leader") <- which(colnames(predicted.clusters[[i]]) == cluster.leaders[i])
 if (for.report)
-  pdf(file = "cluster_plots.pdf", title = "Clusters", width = 22, height = 10)
+  pdf(file = paste(switch(baseline + 1, "gerp_cluster", "corr_cluster", "industry_group"), "lags.pdf", sep = "_"), title = "Clusters", width = 22, height = 10)
 lapply(predicted.clusters, function(cluster) {
   members <- attr(cluster, "members") - 1
   leader <- attr(cluster, "leader")
@@ -30,7 +30,7 @@ if (for.report)
 for (i in 1:length(group.clusters))
   attr(group.clusters[[i]], "leader") <- which(colnames(group.clusters[[i]]) == group.leaders[i])
 if (for.report)
-  pdf(file = "industry_plots.pdf", title = "Industries", width = 22, height = 10)
+  pdf(file = "industry_group_lags.pdf", title = "Industries", width = 22, height = 10)
 lapply(group.clusters, function(cluster) {
   members <- attr(cluster, "members") - 1
   leader <- attr(cluster, "leader")
